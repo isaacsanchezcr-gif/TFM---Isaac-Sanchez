@@ -45,7 +45,7 @@ reports/figures/   figuras para la memoria
 | Notebook | Contenido | Estado |
 | --- | --- | --- |
 | `01_integracion_y_calidad` | Unión de años, perfil de calidad, armonización de cantones, tabla cantón–mes–delito | Hecho |
-| `02_eda` | Tendencias, estacionalidad, mapas y anomalías | Pendiente |
+| `02_eda` | Tendencias, estacionalidad, mapas, relación con el IDS y eventos masivos | Hecho |
 | `03_espacial_y_clustering` | Autocorrelación espacial y perfiles de cantones | Pendiente |
 | `04_modelizacion` | Comparación de modelos con validación temporal | Pendiente |
 | `05_interpretabilidad` | Explicación de predicciones con SHAP | Pendiente |
