@@ -49,6 +49,7 @@ reports/figures/   figuras para la memoria
 
 ## Decisiones de preparación
 
+- **Versiones de archivo:** de 2019 a 2024 el portal publica cada año en XLS y en XLSX. Se usa el XLSX, que es la versión más reciente y completa (el XLS de 2023 solo llega al 30 de agosto y el de 2024 al 16 de junio).
 - **Cantones nuevos:** Río Cuarto (2017), Monteverde (2021) y Puerto Jiménez (2022) se reasignan a Grecia, Puntarenas y Golfito para mantener 81 series comparables en todo el periodo.
 - **Meses incompletos:** el último mes publicado se excluye si no llega hasta su último día.
 - **Registros sin cantón:** se excluyen de la tabla agregada (0,2 % del total).
