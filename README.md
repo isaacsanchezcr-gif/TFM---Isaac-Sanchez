@@ -13,7 +13,7 @@ Pronosticar los delitos denunciados por cantón, mes y tipo de delito en Costa R
 | Fuente | Uso | Licencia |
 | --- | --- | --- |
 | [Estadísticas Policiales del OIJ](https://datosabiertospj.poder-judicial.go.cr/dataset/estadisticas-policiales) (Poder Judicial) | Delitos denunciados 2015–2026 | Creative Commons Attribution |
-| Población cantonal (INEC) | Tasas por habitante | Pendiente |
+| Estimaciones y proyecciones distritales 2000–2025 (INEC, 2014) y proyecciones subnacionales 2000–2050 (INEC, 2025) | Población por cantón y año 2015–2026, para tasas por habitante | Reproducción permitida citando la fuente |
 | Índice de Desarrollo Social (MIDEPLAN) | Variables socioeconómicas | Pendiente |
 
 Los archivos de datos no se suben al repositorio por su tamaño. Para reproducir el proyecto:
@@ -23,6 +23,8 @@ pip install -r requirements.txt
 python scripts/descargar_oij.py      # descarga los archivos del OIJ en data/raw/
 ```
 
+La población por cantón ya está construida en `data/external/poblacion_cantonal.csv` (ver `scripts/construir_poblacion.py`).
+
 También pueden descargarse a mano desde el portal y guardarse en `data/raw/` con su nombre original.
 
 ## Estructura
@@ -30,6 +32,7 @@ También pueden descargarse a mano desde el portal y guardarse en `data/raw/` co
 ```
 data/raw/          datos originales (no versionados)
 data/processed/    datos limpios y agregados (no versionados)
+data/external/     tablas auxiliares pequeñas derivadas de fuentes oficiales (sí versionadas)
 notebooks/         análisis paso a paso, numerados en orden de ejecución
 src/               funciones reutilizables de carga, limpieza y modelado
 scripts/           descarga y actualización de datos
@@ -55,3 +58,4 @@ reports/figures/   figuras para la memoria
 - **Registros sin cantón:** se excluyen de la tabla agregada (0,2 % del total).
 - **Filas idénticas:** se conservan, porque sin identificador de caso pueden ser varias víctimas de un mismo hecho.
 - **Género:** vacío en todos los registros; se descarta.
+- **Población cantonal:** el INEC solo publica la proyección por cantón con base en el censo 2011 (llega a 2025 y sobrestima la población reciente en torno a un 3 %). La proyección nueva, basada en el censo 2022, solo llega a provincia. Se combinan: el peso de cada cantón dentro de su provincia sale de la proyección de 2014 y se aplica al total provincial de la de 2025. Para 2026 se mantiene el peso de 2025.
