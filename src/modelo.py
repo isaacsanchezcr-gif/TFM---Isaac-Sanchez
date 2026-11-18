@@ -23,10 +23,18 @@ def fines_de_semana(mes: pd.Period) -> int:
     return int((dias.dayofweek >= 5).sum())
 
 
-def construir_panel(raiz: Path) -> pd.DataFrame:
-    """Panel completo con conteos mensuales y datos estructurales del cantón."""
+def construir_panel(raiz: Path, incluir_mes_siguiente: bool = False) -> pd.DataFrame:
+    """Panel completo con conteos mensuales y datos estructurales del cantón.
+
+    Con `incluir_mes_siguiente=True` añade las filas del mes posterior al último
+    mes completo, con `Delitos` vacío: son las filas que el sistema pronostica.
+    """
     df = oij.cargar_todos(raiz / "data" / "raw")
     panel = oij.agregar_mensual(df)
+    if incluir_mes_siguiente:
+        siguiente = panel["Mes"].max() + 1
+        nuevas = panel[panel["Mes"] == panel["Mes"].max()].assign(Mes=siguiente, Delitos=np.nan)
+        panel = pd.concat([panel, nuevas], ignore_index=True)
     panel["Anio"] = panel["Mes"].dt.year
 
     ext = raiz / "data" / "external"
@@ -34,7 +42,12 @@ def construir_panel(raiz: Path) -> pd.DataFrame:
     ids = pd.read_csv(ext / "ids_2023_cantonal.csv")
     perfil = pd.read_csv(raiz / "data" / "processed" / "perfil_cantones.csv")
 
-    panel = panel.merge(pob[["Canton", "Anio", "Poblacion"]], on=["Canton", "Anio"], how="left")
+    # Si el año pedido aún no tiene población publicada, se usa el último disponible
+    anios = sorted(pob["Anio"].unique())
+    panel["Anio_pob"] = panel["Anio"].clip(upper=anios[-1])
+    pob = pob.rename(columns={"Anio": "Anio_pob"})
+    panel = panel.merge(pob[["Canton", "Anio_pob", "Poblacion"]], on=["Canton", "Anio_pob"], how="left")
+    panel = panel.drop(columns="Anio_pob")
     panel = panel.merge(ids[["Canton"] + IDS_VARIABLES], on="Canton", how="left")
     panel = panel.merge(perfil[["Canton", "Grupo"]], on="Canton", how="left")
     return panel.sort_values(["Canton", "Delito", "Mes"]).reset_index(drop=True)
@@ -157,3 +170,26 @@ def sarima_un_paso(datos: pd.DataFrame, fin_train: pd.Period, ini_eval: pd.Perio
                                         "SARIMA": np.clip(pred, 0, None)}))
     print(f"Series sin convergencia: {fallos}")
     return pd.concat(salida, ignore_index=True)
+
+
+def offset(df: pd.DataFrame) -> pd.Series:
+    """Punto de partida del LightGBM: logaritmo de la media de los últimos 12 meses."""
+    return np.log(df["media_12"] + 0.5)
+
+
+def predecir(booster, df: pd.DataFrame) -> np.ndarray:
+    """Delitos esperados según el LightGBM (el modelo corrige la media de 12 meses)."""
+    return np.exp(booster.predict(df[VARIABLES], raw_score=True) + offset(df).values)
+
+
+def contribuciones(booster, df: pd.DataFrame) -> pd.DataFrame:
+    """Valores SHAP (TreeSHAP nativo de LightGBM) en escala logarítmica.
+
+    Para cada fila: log(predicción) = offset + base + suma de contribuciones.
+    Como el modelo es multiplicativo, exp(contribución) se lee como
+    "esta variable multiplica la predicción por ese factor".
+    """
+    valores = booster.predict(df[VARIABLES], pred_contrib=True)
+    salida = pd.DataFrame(valores[:, :-1], columns=VARIABLES, index=df.index)
+    salida["_base"] = valores[:, -1]
+    return salida
