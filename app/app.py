@@ -123,7 +123,8 @@ with pestanas[0]:
 
     previstos = datos["Prevision"].sum()
     habitual = datos["media_12"].sum()
-    alertables = datos[datos["media_12"] >= 3]
+    # El homicidio no genera alertas por cantón: a esa escala el azar domina (notebook 06)
+    alertables = datos[(datos["media_12"] >= 3) & (datos["Delito"] != "HOMICIDIO")]
     n_alertas = int((alertables["Riesgo"] >= 1.10).sum())
 
     c1, c2, c3 = st.columns(3)
@@ -134,6 +135,14 @@ with pestanas[0]:
 
     por_canton = datos.groupby("Canton").agg(Prevision=("Prevision", "sum"), Habitual=("media_12", "sum"),
                                              Poblacion=("Poblacion", "first"))
+    if delito == "HOMICIDIO":
+        # Por cantón el pronóstico de homicidios no es informativo: el mapa muestra el valor de la provincia
+        provincia = datos.groupby("Canton")["Provincia"].first()
+        por_prov = datos.groupby("Provincia").agg(Prevision=("Prevision", "sum"), Habitual=("media_12", "sum"))
+        por_prov["Poblacion"] = datos.drop_duplicates("Canton").groupby("Provincia")["Poblacion"].sum()
+        por_canton = por_prov.loc[provincia.values].set_axis(provincia.index)
+        st.info("El homicidio se muestra **por provincia**: por cantón hay menos de un caso al mes y el pronóstico "
+                "no es fiable (error cercano al 80 %, frente a un 30 % por provincia).")
     por_canton["Tasa"] = por_canton["Prevision"] / por_canton["Poblacion"] * 1e5
     por_canton["Variacion"] = (por_canton["Prevision"] / (por_canton["Habitual"] + 0.5) - 1) * 100
 
@@ -171,6 +180,16 @@ with pestanas[0]:
     tabla.index = range(1, len(tabla) + 1)
     st.dataframe(tabla, width="stretch")
 
+    if delito in ("Todos", "HOMICIDIO"):
+        st.subheader("Homicidios previstos por provincia")
+        h = pron[pron["Delito"] == "HOMICIDIO"].groupby("Provincia").agg(
+            Previstos=("Prevision", "sum"), Media=("media_12", "sum")).sort_values("Previstos", ascending=False)
+        st.dataframe(pd.DataFrame({
+            "Provincia": h.index.str.title().str.replace("Jose", "José").str.replace("Limon", "Limón"),
+            "Previstos": h["Previstos"].round(0).astype(int), "Media 12 meses": h["Media"].round(0).astype(int),
+            "Variación": ((h["Previstos"] / h["Media"] - 1) * 100).round(0).astype(int).astype(str) + " %",
+        }).set_index("Provincia"), width="stretch")
+
     st.subheader("Dónde se concentrará la carga de trabajo")
     carga = por_canton.sort_values("Prevision", ascending=False).head(10)
     st.bar_chart(pd.Series(carga["Prevision"].values, index=carga.index.map(titulo), name="Delitos previstos"),
@@ -185,6 +204,9 @@ with pestanas[1]:
     delito_c = col2.selectbox("Delito", oij.DELITOS, format_func=ET.get, key="delito_consulta")
 
     fila = pron[(pron["Canton"] == canton) & (pron["Delito"] == delito_c)].iloc[0]
+    if delito_c == "HOMICIDIO":
+        st.warning("Por cantón, el pronóstico de homicidios tiene un error cercano al 80 %: tómalo como orientativo "
+                   "y consulta la vista por provincia en la pestaña Panorama.")
     m1, m2, m3 = st.columns(3)
     m1.metric(f"Previstos en {mes_txt}", f"{fila['Prevision']:.1f}")
     m2.metric("Media de los últimos 12 meses", f"{fila['media_12']:.1f}")
@@ -276,6 +298,9 @@ Monteverde y Puerto Jiménez integrados en su cantón de origen).
 - Error (WAPE) del 34,5 %, frente al 36,4 % de la media de 12 meses y al 37,9 % de un SARIMA por serie.
   Incluso un modelo perfecto tendría alrededor de un 25 % de error, por el componente aleatorio de los delitos.
 - De las 10 alertas mensuales de aumento, el 15 % fueron aumentos reales, frente al 7–8 % de los criterios simples.
+- Repetida la evaluación en cinco periodos distintos (2019, 2022, 2023, 2024 y 2025–26), el modelo nunca es
+  significativamente peor que la media de 12 meses y supera al criterio de tendencia en la detección de aumentos en todos ellos.
+- El homicidio se presenta por provincia, donde el error ronda el 30 % (por cantón supera el 80 %).
 
 **Fuentes.** Estadísticas Policiales del OIJ (Poder Judicial, licencia CC BY); proyecciones de población del INEC;
 Índice de Desarrollo Social 2023 y límites cantonales del MIDEPLAN.

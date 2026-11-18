@@ -64,6 +64,7 @@ reports/figures/   figuras para la memoria
 | `03_espacial_y_clustering` | Vecindad, Moran global y local (focos) y segmentación en cuatro perfiles | Hecho |
 | `04_modelizacion` | Referencias simples, SARIMA por serie y LightGBM global; precisión y detección de aumentos atípicos | Hecho |
 | `05_interpretabilidad_y_priorizacion` | Explicación con SHAP, valor de negocio de las alertas y pronóstico del mes siguiente | Hecho |
+| `06_robustez` | Validación con origen móvil en cinco periodos, intervalos de confianza por bootstrap y escala adecuada para el homicidio | Hecho |
 
 ## Decisiones de preparación
 
