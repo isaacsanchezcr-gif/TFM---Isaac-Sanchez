@@ -20,6 +20,8 @@ NARANJA = "#eb6834"   # solo para resaltar un dato puntual
 
 # Rampa secuencial de un solo tono (azul), de claro a oscuro
 RAMPA = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+# Rampa divergente: azul (baja) – gris neutro – rojo (sube)
+RAMPA_DIVERGENTE = ["#184f95", "#6da7ec", "#cde2fb", "#eceae6", "#f6c4b8", "#e66767", "#b8322f"]
 
 ETIQUETAS_DELITO = {
     "HURTO": "Hurto",
@@ -67,20 +69,24 @@ def _poligonos(geom):
 
 
 def mapa(ax, geometrias: dict, valores: pd.Series, cortes: list[float] | None = None,
-         titulo: str = "", formato: str = "{:,.0f}", leyenda: bool = True) -> list[float]:
+         titulo: str = "", formato: str = "{:,.0f}", leyenda: bool = True,
+         rampa: list[str] | None = None) -> list[float]:
     """Mapa coroplético por cantón con clases por cuantiles (o cortes dados)."""
+    rampa = rampa or RAMPA
     valores = valores.reindex(list(geometrias))
     if cortes is None:
-        cortes = list(np.unique(np.nanquantile(valores, np.linspace(0, 1, len(RAMPA) + 1))))
+        cortes = list(np.unique(np.nanquantile(valores, np.linspace(0, 1, len(rampa) + 1))))
     n = len(cortes) - 1
-    cmap = ListedColormap(RAMPA[-n:] if n < len(RAMPA) else RAMPA)
+    cmap = ListedColormap(rampa[-n:] if n < len(rampa) else rampa)
     norm = BoundaryNorm(cortes, cmap.N, clip=True)
     for canton, geom in geometrias.items():
         v = valores.get(canton)
-        color = "#eceef1" if pd.isna(v) else cmap(norm(v))
         for poli in _poligonos(geom):
             x, y = poli.exterior.xy
-            ax.fill(x, y, color=color, ec="white", lw=0.35)
+            if pd.isna(v):  # sin dato: rayado, para no confundirlo con ninguna clase
+                ax.fill(x, y, facecolor="white", hatch="////", edgecolor="#c5cad1", lw=0.35)
+            else:
+                ax.fill(x, y, color=cmap(norm(v)), ec="white", lw=0.35)
     ax.set_xlim(-86.0, -82.5)
     ax.set_ylim(8.0, 11.25)
     ax.set_aspect("equal")

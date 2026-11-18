@@ -27,6 +27,20 @@ Las tablas auxiliares ya están construidas en `data/external/`: población por 
 
 También pueden descargarse a mano desde el portal y guardarse en `data/raw/` con su nombre original.
 
+## Aplicación: sistema de alerta temprana
+
+La aplicación muestra el pronóstico del mes siguiente, un mapa de variación y de tasa prevista, las 10 alertas del mes con sus motivos, una consulta por cantón con su historia y la explicación del pronóstico, y un simulador que recalcula la predicción al cambiar los datos de entrada.
+
+```bash
+streamlit run app/app.py
+```
+
+Para publicarla gratis: en [share.streamlit.io](https://share.streamlit.io) se conecta este repositorio y se indica `app/app.py` como archivo principal.
+
+### Actualización automática
+
+`scripts/actualizar.py` reconstruye el panel con los últimos datos, reentrena el modelo de producción y regenera los archivos de `app/datos/`. El flujo de GitHub Actions `.github/workflows/actualizar.yml` revisa cada día si el OIJ publicó o modificó archivos y, si es así, ejecuta la actualización y guarda los resultados en el repositorio. También puede lanzarse a mano desde la pestaña **Actions**.
+
 ## Estructura
 
 ```
@@ -36,7 +50,8 @@ data/external/     tablas auxiliares pequeñas derivadas de fuentes oficiales (s
 notebooks/         análisis paso a paso, numerados en orden de ejecución
 src/               funciones reutilizables de carga, limpieza y modelado
 scripts/           descarga y actualización de datos
-app/               aplicación Streamlit
+app/               aplicación Streamlit (app.py) y los datos que muestra (datos/)
+models/            modelo entrenado y su configuración
 reports/figures/   figuras para la memoria
 ```
 
@@ -47,8 +62,8 @@ reports/figures/   figuras para la memoria
 | `01_integracion_y_calidad` | Unión de años, perfil de calidad, armonización de cantones, tabla cantón–mes–delito | Hecho |
 | `02_eda` | Tendencias, estacionalidad, mapas, relación con el IDS y eventos masivos | Hecho |
 | `03_espacial_y_clustering` | Vecindad, Moran global y local (focos) y segmentación en cuatro perfiles | Hecho |
-| `04_modelizacion` | Comparación de modelos con validación temporal | Pendiente |
-| `05_interpretabilidad` | Explicación de predicciones con SHAP | Pendiente |
+| `04_modelizacion` | Referencias simples, SARIMA por serie y LightGBM global; precisión y detección de aumentos atípicos | Hecho |
+| `05_interpretabilidad_y_priorizacion` | Explicación con SHAP, valor de negocio de las alertas y pronóstico del mes siguiente | Hecho |
 
 ## Decisiones de preparación
 
