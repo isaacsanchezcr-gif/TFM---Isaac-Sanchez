@@ -37,6 +37,7 @@ notebooks/         análisis paso a paso, numerados en orden de ejecución
 src/               funciones reutilizables de carga, limpieza y modelado
 scripts/           descarga y actualización de datos
 app/               aplicación Streamlit
+models/            modelo entrenado y su configuración
 reports/figures/   figuras para la memoria
 ```
 
@@ -47,7 +48,7 @@ reports/figures/   figuras para la memoria
 | `01_integracion_y_calidad` | Unión de años, perfil de calidad, armonización de cantones, tabla cantón–mes–delito | Hecho |
 | `02_eda` | Tendencias, estacionalidad, mapas, relación con el IDS y eventos masivos | Hecho |
 | `03_espacial_y_clustering` | Vecindad, Moran global y local (focos) y segmentación en cuatro perfiles | Hecho |
-| `04_modelizacion` | Comparación de modelos con validación temporal | Pendiente |
+| `04_modelizacion` | Referencias simples, SARIMA por serie y LightGBM global; precisión y detección de aumentos atípicos | Hecho |
 | `05_interpretabilidad` | Explicación de predicciones con SHAP | Pendiente |
 
 ## Decisiones de preparación
