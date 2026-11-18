@@ -40,7 +40,7 @@ def construir_panel(raiz: Path, incluir_mes_siguiente: bool = False) -> pd.DataF
     ext = raiz / "data" / "external"
     pob = pd.read_csv(ext / "poblacion_cantonal.csv")
     ids = pd.read_csv(ext / "ids_2023_cantonal.csv")
-    perfil = pd.read_csv(raiz / "data" / "processed" / "perfil_cantones.csv")
+    perfil = pd.read_csv(raiz / "data" / "external" / "perfil_cantones.csv")
 
     # Si el año pedido aún no tiene población publicada, se usa el último disponible
     anios = sorted(pob["Anio"].unique())

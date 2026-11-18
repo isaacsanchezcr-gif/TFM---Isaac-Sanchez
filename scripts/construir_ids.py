@@ -87,7 +87,8 @@ def construir(ruta: Path) -> tuple[pd.DataFrame, dict]:
         datos = dict(zip(nombres, registro.record))
         canton = normalizar_texto(datos["CANT_N"])
         canton = RENOMBRAR.get(canton, canton)
-        fila = {"Provincia": normalizar_texto(datos["PROVINCIA"]), "Canton": canton}
+        fila = {"Provincia": normalizar_texto(datos["PROVINCIA"]), "Canton": canton,
+                "Nombre": datos["CANT_N"].strip()}
         fila.update({nuevo: datos[viejo] for viejo, nuevo in CAMPOS.items()})
         filas.append(fila)
         geometrias[canton] = shape(registro.shape.__geo_interface__).buffer(0)
